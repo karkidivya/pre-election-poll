@@ -1,9 +1,33 @@
 import { useState } from "react";
-import { db, addDoc, collection } from "./firebase";
+import { auth, db, addDoc, collection, getDocs, query, where } from "./firebase";
+
+// Hash email for privacy before storing in Firestore
+const hashEmail = async (email) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(email);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+};
 
 const submitVote = async (candidateId) => {
   try {
-    await addDoc(collection(db, "votes"), {
+    const user = auth.currentUser;
+    if (!user) return;
+    const hashedEmail = await hashEmail(user.email);
+
+    // Check if user has already voted
+    const votesRef = collection(db, "votes");
+    const q = query(votesRef, where("userId", "==", hashedEmail));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      console.log("User has already voted!");
+      return;
+    }
+
+    // Store only hashed email, not the actual email
+    await addDoc(votesRef, {
+      userId: hashedEmail,
       candidate: candidateId,
       timestamp: new Date().toISOString(),
     });

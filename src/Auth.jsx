@@ -1,4 +1,4 @@
-import { auth, provider, signInWithPopup } from "./firebase";
+import { auth, provider, signInWithPopup, signOut } from "./firebase";
 
 const signIn = async () => {
   try {
@@ -8,7 +8,7 @@ const signIn = async () => {
       console.log("Access granted: ", email);
     } else {
       console.log("Access denied: Invalid email");
-      auth.signOut();
+      await signOut(auth);
     }
   } catch (error) {
     console.error("Error signing in: ", error);

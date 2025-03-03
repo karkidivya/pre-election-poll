@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Auth from "./Auth";
 import Voting from "./Voting";
 import Results from "./Results";
@@ -8,9 +8,13 @@ import { onAuthStateChanged } from "firebase/auth";
 export default function App() {
   const [user, setUser] = useState(null);
 
-  onAuthStateChanged(auth, (user) => {
-    setUser(user);
-  });
+  // Use useEffect to properly manage authentication state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div>
